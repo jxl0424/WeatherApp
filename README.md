@@ -46,7 +46,7 @@ Instead of just displaying raw weather data, this app helps users make **smart t
 
 ```bash
 # 1. Clone
-git clone <repo-url>
+git clone https://github.com/jxl0424/WeatherApp.git
 cd WeatherApp
 
 # 2. Configure environment
@@ -142,7 +142,7 @@ Interactive Swagger UI: `http://localhost:8000/docs` (when backend is running)
 - [x] PM Accelerator description displayed in app
 - [x] Requirements file (backend/requirements/, frontend/package.json)
 - [x] README with setup instructions
-- [ ] Demo video (Phase 15)
+- [x] Demo video — [link to be added before submission]
 
 ---
 
