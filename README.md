@@ -5,14 +5,6 @@ Full-Stack submission for the PM Accelerator AI Engineer Intern Technical Assess
 
 ---
 
-## About PM Accelerator
-
-**Product Manager Accelerator (PMA)** is a world-class product management program that helps aspiring and current product managers land their dream PM roles, advance their careers, and build meaningful connections within a global community of product leaders. Through structured mentorship, real-world project experience, and expert-led training, PMA equips professionals with the skills, frameworks, and network needed to thrive in the modern product landscape.
-
-🔗 [LinkedIn: Product Manager Accelerator](https://www.linkedin.com/company/product-manager-accelerator/)
-
----
-
 ## Project Overview
 
 Instead of just displaying raw weather data, this app helps users make **smart travel decisions** based on current conditions, 5-day forecasts, and AI-generated advice — answering the question *"What should a traveler consider that isn't obvious from a temperature number?"*
