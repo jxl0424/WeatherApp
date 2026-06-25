@@ -107,3 +107,31 @@ export const AQIResponseSchema = z.object({
   pm10: z.number().nullable().optional(),
 });
 export type AQIResponse = z.infer<typeof AQIResponseSchema>;
+
+// ── Weather summary ───────────────────────────────────────────────────────────
+
+export const WeatherSummaryResponseSchema = z.object({
+  summary: z.string(),
+});
+export type WeatherSummaryResponse = z.infer<typeof WeatherSummaryResponseSchema>;
+
+// ── Resolve location ──────────────────────────────────────────────────────────
+
+export const ResolveLocationResponseSchema = z.object({
+  suggested_location: z.string(),
+  reasoning: z.string(),
+});
+export type ResolveLocationResponse = z.infer<typeof ResolveLocationResponseSchema>;
+
+// ── Weather chat ──────────────────────────────────────────────────────────────
+
+export const ChatMessageSchema = z.object({
+  role: z.enum(["user", "assistant"]),
+  content: z.string(),
+});
+export type ChatMessage = z.infer<typeof ChatMessageSchema>;
+
+export const ChatResponseSchema = z.object({
+  reply: z.string(),
+});
+export type ChatResponse = z.infer<typeof ChatResponseSchema>;

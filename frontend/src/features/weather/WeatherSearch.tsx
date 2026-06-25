@@ -1,14 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { MapPin, Search, Loader2, Navigation, CloudSun } from "lucide-react";
+import { MapPin, Search, Loader2, Navigation, CloudSun, Sparkles } from "lucide-react";
+import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useGeolocation } from "@/hooks/useGeolocation";
 import { useCurrentWeather } from "./useCurrentWeather";
+import { useResolveLocation } from "./useResolveLocation";
 import { WeatherCard } from "./WeatherCard";
 import { ForecastGrid } from "@/features/forecast/ForecastGrid";
 import { AdvicePanel } from "@/features/advice/AdvicePanel";
+import { WeatherSummary } from "@/features/advice/WeatherSummary";
+import { WeatherChat } from "@/features/advice/WeatherChat";
 import { SaveSearchForm } from "@/features/history/SaveSearchForm";
 import { ErrorMessage } from "@/components/ErrorMessage";
 
@@ -16,6 +20,7 @@ export function WeatherSearch() {
   const [inputValue, setInputValue] = useState("");
   const [submittedLocation, setSubmittedLocation] = useState("");
   const geo = useGeolocation();
+  const resolveLocation = useResolveLocation();
 
   const locationQuery = useCurrentWeather({
     location: submittedLocation || undefined,
@@ -45,6 +50,22 @@ export function WeatherSearch() {
     geo.locate();
   }
 
+  async function handleAIResolve() {
+    const trimmed = inputValue.trim();
+    if (!trimmed) return;
+    resolveLocation.mutate(trimmed, {
+      onSuccess: (data) => {
+        geo.reset();
+        setInputValue(data.suggested_location);
+        setSubmittedLocation(data.suggested_location);
+        toast.info(`AI suggested: ${data.suggested_location}`, { description: data.reasoning });
+      },
+      onError: (err) => {
+        toast.error(err.message);
+      },
+    });
+  }
+
   return (
     <div className="space-y-6">
       {/* Search bar */}
@@ -53,7 +74,7 @@ export function WeatherSearch() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             className="pl-9"
-            placeholder="City, zip code, landmark, GPS coordinates…"
+            placeholder="City, landmark, or describe it — 'warm beach in Europe'…"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             aria-label="Location search"
@@ -61,6 +82,19 @@ export function WeatherSearch() {
         </div>
         <Button type="submit" disabled={!inputValue.trim()}>
           Search
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={handleAIResolve}
+          disabled={!inputValue.trim() || resolveLocation.isPending}
+          title="Ask AI to suggest a location from your description"
+        >
+          {resolveLocation.isPending ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Sparkles className="h-4 w-4 text-yellow-500" />
+          )}
         </Button>
         <Button
           type="button"
@@ -111,11 +145,13 @@ export function WeatherSearch() {
             {weatherData.resolved_location}
           </div>
           <WeatherCard current={weatherData.current} />
+          <WeatherSummary key={weatherData.resolved_location} weatherData={weatherData} />
           <ForecastGrid forecast={weatherData.forecast} />
           <div className="grid md:grid-cols-2 gap-4">
             <SaveSearchForm resolvedLocation={weatherData.resolved_location} />
             <AdvicePanel key={weatherData.resolved_location} weatherData={weatherData} />
           </div>
+          <WeatherChat key={weatherData.resolved_location} weatherData={weatherData} />
         </div>
       )}
     </div>

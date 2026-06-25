@@ -1,5 +1,6 @@
 from datetime import date, datetime
 from decimal import Decimal
+from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
@@ -145,3 +146,45 @@ class AQIResponse(BaseModel):
     label: str
     pm2_5: float | None = None
     pm10: float | None = None
+
+
+# ── Weather summary schemas ────────────────────────────────────────────────────
+
+class WeatherSummaryRequest(BaseModel):
+    location: str = Field(min_length=1, max_length=255)
+    current: CurrentWeather
+    forecast: list[ForecastDay] = Field(max_length=16)
+
+
+class WeatherSummaryResponse(BaseModel):
+    summary: str
+
+
+# ── Natural-language location resolution schemas ───────────────────────────────
+
+class ResolveLocationRequest(BaseModel):
+    query: str = Field(min_length=1, max_length=500)
+
+
+class ResolveLocationResponse(BaseModel):
+    suggested_location: str
+    reasoning: str
+
+
+# ── Weather chat schemas ───────────────────────────────────────────────────────
+
+class ChatMessage(BaseModel):
+    role: Literal["user", "assistant"]
+    content: str = Field(min_length=1, max_length=2000)
+
+
+class ChatRequest(BaseModel):
+    location: str = Field(min_length=1, max_length=255)
+    current: CurrentWeather
+    forecast: list[ForecastDay] = Field(max_length=16)
+    history: list[ChatMessage] = Field(default_factory=list, max_length=20)
+    message: str = Field(min_length=1, max_length=2000)
+
+
+class ChatResponse(BaseModel):
+    reply: str
