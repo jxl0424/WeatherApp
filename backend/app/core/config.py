@@ -9,7 +9,7 @@ class Settings(BaseSettings):
 
     NVIDIA_API_KEY: str = ""
     NVIDIA_BASE_URL: str = "https://integrate.api.nvidia.com/v1"
-    NVIDIA_MODEL: str = "meta/llama-3.1-8b-instruct"
+    NVIDIA_MODEL: str = "minimaxai/minimax-m3"
 
     APP_ENV: str = "development"
 

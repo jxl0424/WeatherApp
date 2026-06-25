@@ -1,10 +1,5 @@
 # AI-Powered Weather Travel Advisor
 
-**Submitted by: Brendan Lee**  
-Full-Stack submission for the PM Accelerator AI Engineer Intern Technical Assessment (Tech Assessment #1 + #2)
-
----
-
 ## Project Overview
 
 Instead of just displaying raw weather data, this app helps users make **smart travel decisions** based on current conditions, 5-day forecasts, and AI-generated advice — answering the question *"What should a traveler consider that isn't obvious from a temperature number?"*
@@ -31,7 +26,7 @@ Instead of just displaying raw weather data, this app helps users make **smart t
 | Backend | FastAPI, SQLAlchemy 2.0, Alembic, Pydantic v2, Uvicorn |
 | Database | PostgreSQL 16 |
 | Weather | Open-Meteo (weather, geocoding, air quality) — no API key required |
-| AI | NVIDIA NIM (llama-3.1-8b-instruct via OpenAI-compatible API) |
+| AI | NVIDIA NIM (minimax-m3 via OpenAI-compatible API) |
 | Deploy | Docker + Docker Compose |
 
 ---
@@ -97,7 +92,7 @@ npm run dev
 | `DATABASE_URL` | Yes | — | PostgreSQL connection string |
 | `NVIDIA_API_KEY` | For AI only | — | From https://build.nvidia.com |
 | `NVIDIA_BASE_URL` | No | `https://integrate.api.nvidia.com/v1` | |
-| `NVIDIA_MODEL` | No | `meta/llama-3.1-8b-instruct` | Any NIM-compatible model |
+| `NVIDIA_MODEL` | No | `minimaxai/minimax-m3` | Any NIM-compatible model |
 | `ALLOWED_ORIGINS` | No | `http://localhost:3000` | CORS allowed origins |
 | `APP_ENV` | No | `development` | Runtime environment label |
 
@@ -107,37 +102,6 @@ npm run dev
 
 Full REST API contract: [docs/api-design.md](docs/api-design.md)  
 Interactive Swagger UI: `http://localhost:8000/docs` (when backend is running)
-
----
-
-## Assessment Requirements Checklist
-
-### Tech Assessment #1 (Frontend)
-- [x] Location search (city, zip, GPS, landmark)
-- [x] Current location via browser geolocation
-- [x] Current weather display with icons
-- [x] 5-day forecast
-- [x] Error handling (location not found, API failures)
-- [x] Responsive design (desktop, tablet, mobile)
-- [x] Multiple API integrations
-
-### Tech Assessment #2 (Backend)
-- [x] CREATE — save weather search with date range + validation
-- [x] READ — list and detail views of saved searches
-- [x] UPDATE — edit location/dates with re-fetch
-- [x] DELETE — remove saved searches
-- [x] Location validation via geocoding (fuzzy match)
-- [x] Date range validation
-- [x] RESTful API with proper HTTP semantics
-- [x] Data export (CSV, JSON, Markdown)
-- [x] Additional API integration (Open-Meteo Air Quality)
-
-### General
-- [ ] Candidate name displayed in app: **Brendan Lee** *(footer removed — restore if required)*
-- [ ] PM Accelerator description displayed in app *(footer removed — restore if required)*
-- [x] Requirements file (backend/requirements/, frontend/package.json)
-- [x] README with setup instructions
-- [ ] Demo video — [link to be added before submission]
 
 ---
 
