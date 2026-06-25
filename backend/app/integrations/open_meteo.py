@@ -113,12 +113,12 @@ async def get_forecast(
             "wind_speed_10m_max",
         ],
         "timezone": "auto",
-        "forecast_days": 7,
     }
-    if start_date:
+    if start_date and end_date:
         params["start_date"] = start_date.isoformat()
-    if end_date:
         params["end_date"] = end_date.isoformat()
+    else:
+        params["forecast_days"] = 7
 
     try:
         async with httpx.AsyncClient(timeout=15) as client:
