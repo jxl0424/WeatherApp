@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Sparkles, Loader2, Shirt, Backpack, MapPin, AlertTriangle, Activity } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/services/apiClient";
 import { AdviceResponseSchema, type AdviceResponse, type CurrentWeatherResponse } from "@/types/weather";
 import { ErrorMessage } from "@/components/ErrorMessage";
@@ -52,6 +52,18 @@ export function AdvicePanel({ weatherData }: Props) {
         </Button>
 
         {error != null && <ErrorMessage error={error} title="AI advisor unavailable" />}
+
+        {loading && (
+          <div className="space-y-3">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="space-y-1">
+                <Skeleton className="h-3 w-24" />
+                <Skeleton className="h-3 w-full" />
+                <Skeleton className="h-3 w-5/6" />
+              </div>
+            ))}
+          </div>
+        )}
 
         {advice && (
           <div className="space-y-3 text-sm">

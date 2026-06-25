@@ -1,3 +1,4 @@
+import asyncio
 from datetime import date
 from decimal import Decimal
 
@@ -26,8 +27,10 @@ async def get_current_weather(
     else:
         lat, lon, resolved = await open_meteo.geocode(location or "")
 
-    current, forecast = await open_meteo.get_forecast(lat, lon)
-    aqi = await open_meteo.get_aqi(lat, lon)
+    (current, forecast), aqi = await asyncio.gather(
+        open_meteo.get_forecast(lat, lon),
+        open_meteo.get_aqi(lat, lon),
+    )
 
     current.aqi = aqi.aqi
     current.aqi_label = aqi.label
@@ -98,8 +101,7 @@ async def update_weather_search(
         raise WeatherSearchNotFoundError(f"Weather search {record_id} not found")
 
     new_location = payload.location_query or row.location_query
-    new_start = payload.start_date or row.start_date
-    new_end = payload.end_date or row.end_date
+    new_start, new_end = payload.merged_date_range(row.start_date, row.end_date)
 
     lat, lon, resolved = await open_meteo.geocode(new_location)
     current, _ = await open_meteo.get_forecast(lat, lon, new_start, new_end)

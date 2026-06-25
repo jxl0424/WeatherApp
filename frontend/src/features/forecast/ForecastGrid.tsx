@@ -29,7 +29,7 @@ function ForecastCard({ day }: { day: ForecastDay }) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const Icon = (LucideIcons as any)[icon] as React.ElementType;
 
-  const label = new Date(day.date + "T12:00:00").toLocaleDateString("en-US", {
+  const label = new Date(day.date + "T12:00:00Z").toLocaleDateString("en-US", {
     weekday: "short",
     month: "short",
     day: "numeric",

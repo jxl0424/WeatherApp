@@ -5,7 +5,7 @@ import { Wind, Droplets, Eye } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import type { CurrentWeather } from "@/types/weather";
-import { wmoIcon, aqiColor, formatTemp } from "@/utils/weather";
+import { wmoIcon, aqiBadgeVariant, formatTemp } from "@/utils/weather";
 
 interface Props {
   current: CurrentWeather;
@@ -41,9 +41,10 @@ export function WeatherCard({ current }: Props) {
               <span className="text-muted-foreground flex items-center gap-1">
                 <Eye className="h-3 w-3" /> Air Quality
               </span>
-              <span className={`font-semibold ${aqiColor(current.aqi)}`}>
-                {current.aqi_label} <span className="font-normal text-muted-foreground">(AQI {current.aqi})</span>
-              </span>
+              <div className="flex items-center gap-1.5">
+                <Badge variant={aqiBadgeVariant(current.aqi)}>{current.aqi_label}</Badge>
+                <span className="text-xs text-muted-foreground">AQI {current.aqi}</span>
+              </div>
             </div>
           )}
         </div>

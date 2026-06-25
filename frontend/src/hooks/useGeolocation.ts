@@ -15,6 +15,10 @@ export function useGeolocation() {
     coords: null,
   });
 
+  function reset() {
+    setState({ loading: false, error: null, coords: null });
+  }
+
   function locate() {
     if (!navigator.geolocation) {
       setState((s) => ({ ...s, error: "Geolocation is not supported by your browser." }));
@@ -31,5 +35,5 @@ export function useGeolocation() {
     );
   }
 
-  return { ...state, locate };
+  return { ...state, locate, reset };
 }

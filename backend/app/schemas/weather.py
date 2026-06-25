@@ -45,6 +45,17 @@ class WeatherSearchUpdate(BaseModel):
             raise ValueError("location_query must not be blank")
         return stripped
 
+    def merged_date_range(self, existing_start: "date", existing_end: "date") -> tuple["date", "date"]:
+        """Return (start, end) after merging with existing record values, then re-validate."""
+        from datetime import timedelta
+        start = self.start_date or existing_start
+        end = self.end_date or existing_end
+        if end < start:
+            raise ValueError("end_date must be on or after start_date")
+        if (end - start).days > 16:
+            raise ValueError("Date range cannot exceed 16 days")
+        return start, end
+
     @model_validator(mode="after")
     def validate_date_range(self) -> "WeatherSearchUpdate":
         if self.start_date and self.end_date:
@@ -114,9 +125,9 @@ class CurrentWeatherResponse(BaseModel):
 # ── AI advice schemas ──────────────────────────────────────────────────────────
 
 class AdviceRequest(BaseModel):
-    location: str
+    location: str = Field(min_length=1, max_length=255)
     current: CurrentWeather
-    forecast: list[ForecastDay]
+    forecast: list[ForecastDay] = Field(max_length=16)
 
 
 class AdviceResponse(BaseModel):

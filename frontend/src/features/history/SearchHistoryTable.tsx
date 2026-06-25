@@ -67,7 +67,38 @@ export function SearchHistoryTable() {
         </div>
       </div>
 
-      <div className="rounded-md border overflow-x-auto">
+      {/* Mobile card list */}
+      <div className="md:hidden space-y-3">
+        {data.items.map((row) => (
+          <div key={row.id} className="rounded-lg border p-3 text-sm space-y-1">
+            <div className="font-medium">{row.resolved_location_name}</div>
+            <div className="text-xs text-muted-foreground">{row.location_query}</div>
+            <div className="flex flex-wrap items-center gap-2 pt-1">
+              <Badge variant="secondary">{row.weather_condition}</Badge>
+              <span className="text-muted-foreground">{Number(row.temperature).toFixed(1)}°C</span>
+              <span className="text-muted-foreground">{row.start_date} → {row.end_date}</span>
+            </div>
+            <div className="flex gap-1 pt-1">
+              <Button variant="ghost" size="icon" onClick={() => openEdit(row)} title="Edit">
+                <Pencil className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => deleteMutation.mutate(row.id)}
+                disabled={deleteMutation.isPending}
+                title="Delete"
+                className="text-destructive hover:text-destructive"
+              >
+                {deleteMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+              </Button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Desktop table */}
+      <div className="hidden md:block rounded-md border overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>

@@ -1,10 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import Link from "next/link";
-import { Cloud, History } from "lucide-react";
 import "./globals.css";
 import { Providers } from "@/lib/providers";
-import { AboutBanner } from "@/components/AboutBanner";
+import { NavBar } from "@/components/NavBar";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -18,7 +16,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "AI Weather Travel Advisor",
-  description: "AI-powered weather search and travel recommendations by Brendan Lee",
+  description: "AI-powered weather search and travel recommendations",
 };
 
 export default function RootLayout({
@@ -28,18 +26,8 @@ export default function RootLayout({
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col bg-background text-foreground">
         <Providers>
-          <nav className="border-b bg-background/80 backdrop-blur sticky top-0 z-10">
-            <div className="container mx-auto px-4 h-14 flex items-center gap-6 max-w-5xl">
-              <Link href="/" className="flex items-center gap-2 font-semibold text-sm">
-                <Cloud className="h-5 w-5 text-blue-500" /> Weather Advisor
-              </Link>
-              <Link href="/history" className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors">
-                <History className="h-4 w-4" /> History
-              </Link>
-            </div>
-          </nav>
+          <NavBar />
           <main className="flex-1">{children}</main>
-          <AboutBanner />
         </Providers>
       </body>
     </html>

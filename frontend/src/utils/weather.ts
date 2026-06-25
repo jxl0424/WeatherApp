@@ -20,6 +20,12 @@ export function aqiColor(aqi: number | null | undefined): string {
   return "text-purple-700";
 }
 
+export function aqiBadgeVariant(aqi: number | null | undefined): "default" | "secondary" | "destructive" | "outline" {
+  if (aqi == null || aqi <= 50) return "secondary";
+  if (aqi <= 100) return "outline";
+  return "destructive";
+}
+
 export function formatTemp(temp: number | string): string {
   return `${Number(temp).toFixed(1)}°C`;
 }

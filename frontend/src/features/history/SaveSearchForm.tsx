@@ -55,14 +55,14 @@ export function SaveSearchForm({ resolvedLocation }: Props) {
           <div className="grid grid-cols-2 gap-2">
             <div>
               <Label htmlFor="start_date">Start date</Label>
-              <Input id="start_date" type="date" defaultValue={today} {...register("start_date")} />
+              <Input id="start_date" type="date" defaultValue={today} min={today} {...register("start_date")} />
               {errors.start_date && (
                 <p className="text-destructive text-xs mt-1">{errors.start_date.message}</p>
               )}
             </div>
             <div>
               <Label htmlFor="end_date">End date</Label>
-              <Input id="end_date" type="date" defaultValue={today} {...register("end_date")} />
+              <Input id="end_date" type="date" defaultValue={today} min={today} {...register("end_date")} />
               {errors.end_date && (
                 <p className="text-destructive text-xs mt-1">{errors.end_date.message}</p>
               )}

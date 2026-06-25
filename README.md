@@ -97,6 +97,7 @@ npm run dev
 | `NVIDIA_BASE_URL` | No | `https://integrate.api.nvidia.com/v1` | |
 | `NVIDIA_MODEL` | No | `meta/llama-3.1-8b-instruct` | Any NIM-compatible model |
 | `ALLOWED_ORIGINS` | No | `http://localhost:3000` | CORS allowed origins |
+| `APP_ENV` | No | `development` | Runtime environment label |
 
 ---
 

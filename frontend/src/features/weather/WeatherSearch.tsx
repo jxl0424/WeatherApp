@@ -1,11 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { MapPin, Search, Loader2, Navigation } from "lucide-react";
+import { MapPin, Search, Loader2, Navigation, CloudSun } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useGeolocation } from "@/hooks/useGeolocation";
-import { useDebounce } from "@/hooks/useDebounce";
 import { useCurrentWeather } from "./useCurrentWeather";
 import { WeatherCard } from "./WeatherCard";
 import { ForecastGrid } from "@/features/forecast/ForecastGrid";
@@ -16,7 +15,6 @@ import { ErrorMessage } from "@/components/ErrorMessage";
 export function WeatherSearch() {
   const [inputValue, setInputValue] = useState("");
   const [submittedLocation, setSubmittedLocation] = useState("");
-  const debouncedInput = useDebounce(inputValue, 500);
   const geo = useGeolocation();
 
   const locationQuery = useCurrentWeather({
@@ -37,8 +35,8 @@ export function WeatherSearch() {
     e.preventDefault();
     const trimmed = inputValue.trim();
     if (!trimmed) return;
+    geo.reset();
     setSubmittedLocation(trimmed);
-    geo.coords && setInputValue(""); // reset geo if user searches manually
   }
 
   function handleLocate() {
@@ -97,6 +95,14 @@ export function WeatherSearch() {
         <ErrorMessage error={activeQuery.error} title="Could not load weather" />
       )}
 
+      {/* Empty state */}
+      {!weatherData && !activeQuery.isLoading && !activeQuery.isError && !geo.error && (
+        <div className="flex flex-col items-center gap-3 py-16 text-muted-foreground">
+          <CloudSun className="h-12 w-12 opacity-30" />
+          <p className="text-sm">Search a city, landmark, or use your current location to get started.</p>
+        </div>
+      )}
+
       {/* Results */}
       {weatherData && (
         <div className="space-y-6">
@@ -108,7 +114,7 @@ export function WeatherSearch() {
           <ForecastGrid forecast={weatherData.forecast} />
           <div className="grid md:grid-cols-2 gap-4">
             <SaveSearchForm resolvedLocation={weatherData.resolved_location} />
-            <AdvicePanel weatherData={weatherData} />
+            <AdvicePanel key={weatherData.resolved_location} weatherData={weatherData} />
           </div>
         </div>
       )}
