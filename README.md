@@ -1,5 +1,8 @@
 # AI-Powered Weather Travel Advisor
 
+**Submitted by:** Brendan Lee  
+**Assessment completed:** Full Stack (Tech Assessment #1 + #2)
+
 ## Project Overview
 
 Instead of just displaying raw weather data, this app helps users make **smart travel decisions** based on current conditions, 5-day forecasts, and AI-generated advice — answering the question *"What should a traveler consider that isn't obvious from a temperature number?"*

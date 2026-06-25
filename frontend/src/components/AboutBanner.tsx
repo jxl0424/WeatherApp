@@ -4,6 +4,7 @@ export function AboutBanner() {
   return (
     <footer className="border-t bg-muted/40 py-6 mt-12">
       <div className="container mx-auto px-4 text-sm text-muted-foreground space-y-1">
+        <p className="font-semibold text-foreground">Brendan Lee — AI Engineer Intern</p>
         <p>
           <span className="font-medium text-foreground">Product Manager Accelerator (PMA)</span> is a world-class
           program that helps aspiring and current product managers land their dream PM roles, advance their careers,
