@@ -9,8 +9,7 @@
 │   Next.js 15 (port 3000)                                        │
 │   ├── App Router pages                                          │
 │   ├── TanStack Query (fetch + cache + error states)             │
-│   ├── shadcn/ui + Tailwind                                      │
-│   └── AboutBanner (candidate name + PM Accelerator description) │
+│   └── shadcn/ui + Tailwind                                      │
 └────────────────────┬────────────────────────────────────────────┘
                      │ REST (JSON) over HTTP
                      ▼
@@ -18,14 +17,14 @@
 │   FastAPI (port 8000)                                           │
 │                                                                 │
 │   api/                                                          │
-│   ├── weather.py    CRUD routes                                 │
-│   ├── advice.py     AI travel advisor route                     │
+│   ├── weather.py    CRUD + ad-hoc weather routes                │
+│   ├── advice.py     AI routes (advisor, summary, chat, resolve) │
 │   └── export.py     CSV / JSON / Markdown export                │
 │                                                                 │
 │   services/         Business logic (called by routes)           │
 │   integrations/     External HTTP clients                       │
-│   └── open_meteo.py → Open-Meteo Weather + Geocoding + AQI     │
-│   └── nvidia_client.py → NVIDIA NIM (LLM inference)            │
+│   ├── open_meteo.py → Open-Meteo Weather + Geocoding + AQI     │
+│   └── nvidia_client.py → NVIDIA NIM (4 inference functions)    │
 │                                                                 │
 │   models / schemas / db                                         │
 └──────────┬───────────────────────────────────────────┬──────────┘
@@ -49,23 +48,26 @@
 ## Data Flow: Ad-hoc Weather Lookup
 
 ```
-User types "Tokyo"
+User types "Tokyo" (or "warm beach in Europe" → AI resolves first)
     │
     ▼
-Frontend: POST /api/v1/weather/current?location=Tokyo
+Frontend: GET /api/v1/weather/current?location=Tokyo
     │
     ▼
 FastAPI: WeatherService.get_current(location="Tokyo")
     │
     ├─► open_meteo.geocode("Tokyo") → {lat, lon, name}
-    ├─► open_meteo.get_forecast(lat, lon) → {current, forecast[]}
-    └─► open_meteo.get_aqi(lat, lon) → {aqi, label}
+    ├─► asyncio.gather(
+    │     open_meteo.get_forecast(lat, lon),   ─┐ concurrent
+    │     open_meteo.get_aqi(lat, lon)          ─┘
+    │   )
     │
     ▼
 Response: CurrentWeatherResponse (NOT persisted)
     │
     ▼
-Frontend: renders weather card + 5-day forecast grid
+Frontend: renders weather card + AI narrative summary (auto-fetch)
+          + 5-day forecast + AI advisor button + chat panel
 ```
 
 ---
@@ -95,26 +97,30 @@ Frontend: invalidates list query → history table refreshes
 
 ---
 
-## Data Flow: AI Travel Advice
+## Data Flow: AI Features (four endpoints, same NIM backend)
 
 ```
-User clicks "Get AI Travel Advice" on a weather card
+POST /advice/summary          (auto-triggered after weather loads)
+POST /advice                  (user clicks "Get Travel Advice")
+POST /advice/resolve-location (user clicks Sparkles button with NL query)
+POST /advice/chat             (user sends a message in the chat panel)
     │
     ▼
-Frontend: POST /api/v1/advice (sends current + forecast + aqi)
+FastAPI: advice_service → nvidia_client.<function>(req)
+    │
+    ├─► Builds system prompt embedding weather context
+    ├─► AsyncOpenAI.chat.completions.create(model=NIM_MODEL, ...)
+    └─► Parses plain-text or JSON response into typed Pydantic model
     │
     ▼
-FastAPI: AdviceService.generate(AdviceRequest)
-    │
-    ├─► Builds structured prompt from weather data
-    ├─► nvidia_client.chat(prompt) → JSON string
-    └─► Pydantic v2 parses response into AdviceResponse
-    │
-    ▼
-Response: { clothing, packing, activities, travel_considerations, warnings }
+Response varies by endpoint:
+  /summary          → { summary: str }
+  /advice           → { clothing, packing, activities, travel_considerations, warnings }
+  /resolve-location → { suggested_location: str, reasoning: str }
+  /chat             → { reply: str }
     │
     ▼
-Frontend: renders advice panel with categorized cards
+Frontend: renders summary inline, advice panel, fills search input, or appends chat bubble
 ```
 
 ---

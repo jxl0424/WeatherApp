@@ -10,14 +10,16 @@ Full-Stack submission for the PM Accelerator AI Engineer Intern Technical Assess
 Instead of just displaying raw weather data, this app helps users make **smart travel decisions** based on current conditions, 5-day forecasts, and AI-generated advice — answering the question *"What should a traveler consider that isn't obvious from a temperature number?"*
 
 **Key capabilities:**
-- Search weather by city, zip code, GPS coordinates, or landmark
+- Search weather by city, zip code, GPS coordinates, landmark, or natural-language description
 - Use your browser's current location
-- View current weather conditions with icons
+- View current weather conditions with icons and Air Quality Index
 - View a 5-day forecast
+- AI-generated plain-English weather narrative (auto-loads with every search)
+- AI travel advisor — clothing, packing, activities, and safety warnings
+- Natural-language location search — type "warm beach in Europe" and AI picks a city
+- Weather chat — ask freeform questions like "Is Wednesday good for hiking?" with full conversation history
 - Save weather searches (CRUD) with date range support
 - Export saved searches to CSV, JSON, or Markdown
-- Get AI-powered travel recommendations (clothing, packing, activities, warnings)
-- See Air Quality Index alongside weather data
 
 ---
 
@@ -53,7 +55,7 @@ docker compose up --build
 #    API docs: http://localhost:8000/docs
 ```
 
-> **Note:** All weather features work without any API key. Only the AI Travel Advisor requires `NVIDIA_API_KEY`. If the key is absent, the advisor shows a graceful "unavailable" message instead of crashing.
+> **Note:** All weather features work without any API key. The four AI features (narrative summary, travel advisor, natural-language location search, and weather chat) require `NVIDIA_API_KEY`. If the key is absent they show a graceful "unavailable" message instead of crashing.
 
 ---
 
@@ -131,11 +133,11 @@ Interactive Swagger UI: `http://localhost:8000/docs` (when backend is running)
 - [x] Additional API integration (Open-Meteo Air Quality)
 
 ### General
-- [x] Candidate name displayed in app: **Brendan Lee**
-- [x] PM Accelerator description displayed in app
+- [ ] Candidate name displayed in app: **Brendan Lee** *(footer removed — restore if required)*
+- [ ] PM Accelerator description displayed in app *(footer removed — restore if required)*
 - [x] Requirements file (backend/requirements/, frontend/package.json)
 - [x] README with setup instructions
-- [x] Demo video — [link to be added before submission]
+- [ ] Demo video — [link to be added before submission]
 
 ---
 
@@ -148,11 +150,11 @@ See [docs/architecture.md](docs/architecture.md) for the full system diagram and
 ## Running Tests
 
 ```bash
-# Backend
+# Backend (21 tests)
 cd backend
 pytest
 
-# Frontend
+# Frontend (5 tests)
 cd frontend
 npm test
 ```

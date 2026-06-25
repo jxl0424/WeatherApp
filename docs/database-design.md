@@ -36,7 +36,7 @@
 
 ---
 
-## SQLAlchemy Model (target shape, Phase 2 implementation)
+## SQLAlchemy Model
 
 ```python
 class WeatherSearch(Base):

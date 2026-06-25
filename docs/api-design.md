@@ -26,12 +26,14 @@ All 4xx and 5xx responses return:
 
 ### `GET /health`
 
-Liveness probe.
+Liveness and database probe.
 
 **Response 200**
 ```json
-{ "status": "ok" }
+{ "status": "ok", "db": "ok" }
 ```
+
+`db` is `"ok"` when the database responds to `SELECT 1`, otherwise `"unavailable"`.
 
 ---
 
@@ -78,6 +80,7 @@ Ad-hoc weather lookup. **Does not persist to database.**
 ```
 
 **Errors**
+- `422 validation_error` — Neither `location` nor `lat`+`lon` provided, or only one of `lat`/`lon` supplied.
 - `404 location_not_found` — Geocoder returned no results.
 - `502 upstream_error` — Open-Meteo unreachable.
 
@@ -248,6 +251,78 @@ Generate AI travel advice from current weather and AQI data using NVIDIA NIM.
 
 **Errors**
 - `503 ai_unavailable` — NVIDIA NIM key missing or API unreachable (graceful fallback, not a crash).
+
+---
+
+### `POST /advice/summary`
+
+Generate a 2–3 sentence plain-English narrative describing what the weather feels like for a traveller. Auto-called by the frontend after every weather load.
+
+**Request body** — same shape as `POST /advice` (`location`, `current`, `forecast`).
+
+**Response 200**
+```json
+{ "summary": "Tokyo is warm and humid today with afternoon temperatures pushing 31°C..." }
+```
+
+**Errors**
+- `503 ai_unavailable`
+
+---
+
+### `POST /advice/resolve-location`
+
+Map a fuzzy or descriptive travel query to a single concrete city using NVIDIA NIM.
+
+**Request body**
+```json
+{ "query": "somewhere warm in Europe next week" }
+```
+
+**Response 200**
+```json
+{
+  "suggested_location": "Lisbon, Portugal",
+  "reasoning": "Lisbon has reliably warm, sunny weather in summer with low humidity."
+}
+```
+
+On parse failure the API echoes the original query as `suggested_location` rather than returning an error.
+
+**Errors**
+- `503 ai_unavailable`
+
+---
+
+### `POST /advice/chat`
+
+Weather-aware conversational Q&A. The caller sends the full conversation history; the server injects current weather + forecast as the system prompt.
+
+**Request body**
+```json
+{
+  "location": "Tokyo, Japan",
+  "current": { "temperature": 28.4, "condition": "Partly cloudy", "condition_code": 2, "aqi": 42, "aqi_label": "Good" },
+  "forecast": [ { "date": "2026-06-26", "temp_min": 23.1, "temp_max": 31.8, "condition": "Overcast", "condition_code": 3 } ],
+  "history": [
+    { "role": "user", "content": "What should I wear?" },
+    { "role": "assistant", "content": "Light breathable clothing — it's hot and humid." }
+  ],
+  "message": "What about for the evening?"
+}
+```
+
+**Validation rules**
+- `message`: 1–2000 chars.
+- `history`: max 20 messages; each `content` 1–2000 chars; `role` must be `"user"` or `"assistant"`.
+
+**Response 200**
+```json
+{ "reply": "Evenings cool to around 24°C — a light cardigan should be enough." }
+```
+
+**Errors**
+- `503 ai_unavailable`
 
 ---
 
