@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: weatherapp-backend
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: free
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: NVIDIA_API_KEY
+        sync: false
+      - key: NVIDIA_BASE_URL
+        value: https://integrate.api.nvidia.com/v1
+      - key: NVIDIA_MODEL
+        value: minimaxai/minimax-m3
+      - key: ALLOWED_ORIGINS
+        sync: false
+      - key: APP_ENV
+        value: production
