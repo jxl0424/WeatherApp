@@ -148,7 +148,7 @@ export function WeatherSearch() {
           <WeatherSummary key={weatherData.resolved_location} weatherData={weatherData} />
           <ForecastGrid forecast={weatherData.forecast} />
           <div className="grid md:grid-cols-2 gap-4">
-            <SaveSearchForm resolvedLocation={weatherData.resolved_location} />
+            <SaveSearchForm locationQuery={submittedLocation} />
             <AdvicePanel key={weatherData.resolved_location} weatherData={weatherData} />
           </div>
           <WeatherChat key={weatherData.resolved_location} weatherData={weatherData} />

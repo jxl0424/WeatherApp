@@ -19,11 +19,19 @@ def export_data(
 ) -> Response:
     if format == FORMAT_JSON:
         content = export_service.export_json(db)
-        return PlainTextResponse(content=content, media_type="application/json")
+        return Response(
+            content=content,
+            media_type="application/json",
+            headers={"Content-Disposition": 'attachment; filename="weather_searches.json"'},
+        )
 
     if format == FORMAT_MD:
         content = export_service.export_markdown(db)
-        return PlainTextResponse(content=content, media_type="text/markdown")
+        return Response(
+            content=content,
+            media_type="text/markdown",
+            headers={"Content-Disposition": 'attachment; filename="weather_searches.md"'},
+        )
 
     content = export_service.export_csv(db)
     return Response(

@@ -33,9 +33,9 @@ app.add_middleware(
 app.add_exception_handler(AppError, app_error_handler)
 
 API_PREFIX = "/api/v1"
+app.include_router(export.router, prefix=API_PREFIX)
 app.include_router(weather.router, prefix=API_PREFIX)
 app.include_router(advice.router, prefix=API_PREFIX)
-app.include_router(export.router, prefix=API_PREFIX)
 app.include_router(integrations.router, prefix=API_PREFIX)
 
 

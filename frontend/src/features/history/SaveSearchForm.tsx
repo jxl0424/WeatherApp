@@ -13,14 +13,14 @@ import { api } from "@/services/apiClient";
 import { CreateSearchFormSchema, type CreateSearchForm, type WeatherSearch } from "@/types/weather";
 
 interface Props {
-  resolvedLocation: string;
+  locationQuery: string;
 }
 
-export function SaveSearchForm({ resolvedLocation }: Props) {
+export function SaveSearchForm({ locationQuery }: Props) {
   const qc = useQueryClient();
   const { register, handleSubmit, formState: { errors }, reset } = useForm<CreateSearchForm>({
     resolver: zodResolver(CreateSearchFormSchema),
-    defaultValues: { location_query: resolvedLocation },
+    defaultValues: { location_query: locationQuery },
   });
 
   const mutation = useMutation({
@@ -29,7 +29,7 @@ export function SaveSearchForm({ resolvedLocation }: Props) {
     onSuccess: () => {
       toast.success("Search saved!");
       qc.invalidateQueries({ queryKey: ["weatherSearches"] });
-      reset({ location_query: resolvedLocation });
+      reset({ location_query: locationQuery });
     },
     onError: (err: Error) => toast.error(err.message),
   });
