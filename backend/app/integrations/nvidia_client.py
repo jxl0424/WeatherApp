@@ -57,8 +57,14 @@ def _require_key() -> str:
     return settings.NVIDIA_API_KEY
 
 
+_client_instance: AsyncOpenAI | None = None
+
+
 def _client() -> AsyncOpenAI:
-    return AsyncOpenAI(base_url=settings.NVIDIA_BASE_URL, api_key=_require_key())
+    global _client_instance
+    if _client_instance is None:
+        _client_instance = AsyncOpenAI(base_url=settings.NVIDIA_BASE_URL, api_key=_require_key())
+    return _client_instance
 
 
 async def generate_advice(req: AdviceRequest) -> AdviceResponse:

@@ -17,5 +17,6 @@ export function useWeatherSummary(weatherData: CurrentWeatherResponse | undefine
     },
     enabled: !!weatherData,
     staleTime: 5 * 60 * 1000,
+    retry: 0,
   });
 }

@@ -14,6 +14,7 @@ export class ApiRequestError extends Error {
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE_URL}${path}`, {
+    signal: AbortSignal.timeout(90_000),
     headers: { "Content-Type": "application/json", ...init?.headers },
     ...init,
   });
