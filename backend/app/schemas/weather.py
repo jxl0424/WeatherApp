@@ -178,12 +178,33 @@ class ChatMessage(BaseModel):
     content: str = Field(min_length=1, max_length=2000)
 
 
+_LOCATION_FORBIDDEN_CHARS = set('\n\r<>`{}')
+_LOCATION_FORBIDDEN_WORDS = {"ignore", "system", "instruction", "prompt", "override", "jailbreak"}
+
+
+def _validate_location(v: str) -> str:
+    v = v.strip()
+    if not v:
+        raise ValueError("location must not be blank")
+    if any(c in _LOCATION_FORBIDDEN_CHARS for c in v):
+        raise ValueError("location contains invalid characters")
+    lower = v.lower()
+    if any(word in lower for word in _LOCATION_FORBIDDEN_WORDS):
+        raise ValueError("location contains disallowed content")
+    return v
+
+
 class ChatRequest(BaseModel):
     location: str = Field(min_length=1, max_length=255)
     current: CurrentWeather
     forecast: list[ForecastDay] = Field(max_length=16)
     history: list[ChatMessage] = Field(default_factory=list, max_length=20)
     message: str = Field(min_length=1, max_length=2000)
+
+    @field_validator("location")
+    @classmethod
+    def sanitize_location(cls, v: str) -> str:
+        return _validate_location(v)
 
 
 class ChatResponse(BaseModel):

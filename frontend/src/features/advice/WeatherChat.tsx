@@ -1,12 +1,12 @@
 "use client";
 
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState } from "react";
 import { MessageCircle, Send, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { api } from "@/services/apiClient";
-import { ChatResponseSchema, type ChatMessage, type CurrentWeatherResponse } from "@/types/weather";
+import { BASE_URL } from "@/services/apiClient";
+import { type ChatMessage, type CurrentWeatherResponse } from "@/types/weather";
 import { ErrorMessage } from "@/components/ErrorMessage";
 
 const SUGGESTIONS = [
@@ -27,9 +27,9 @@ export function WeatherChat({ weatherData }: Props) {
   const [error, setError] = useState<unknown>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
+  function scrollToBottom() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, loading]);
+  }
 
   async function send(text: string) {
     const trimmed = text.trim();
@@ -43,19 +43,72 @@ export function WeatherChat({ weatherData }: Props) {
     setError(null);
 
     try {
-      const raw = await api.post<unknown>("/advice/chat", {
-        location: weatherData.resolved_location,
-        current: weatherData.current,
-        forecast: weatherData.forecast.slice(0, 5),
-        history: messages,
-        message: trimmed,
+      const response = await fetch(`${BASE_URL}/advice/chat`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          location: weatherData.resolved_location,
+          current: weatherData.current,
+          forecast: weatherData.forecast.slice(0, 5),
+          history: messages,
+          message: trimmed,
+        }),
+        signal: AbortSignal.timeout(90_000),
       });
-      const { reply } = ChatResponseSchema.parse(raw);
-      setMessages([...nextHistory, { role: "assistant", content: reply }]);
+
+      if (!response.ok || !response.body) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let full = "";
+      let started = false;
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() ?? "";
+
+        for (const line of lines) {
+          if (!line.startsWith("data: ")) continue;
+          const data = line.slice(6);
+          if (data === "[DONE]") break;
+          try {
+            const parsed = JSON.parse(data) as { token?: string };
+            if (parsed.token) {
+              full += parsed.token;
+              const content = full;
+              if (!started) {
+                started = true;
+                setMessages([...nextHistory, { role: "assistant", content }]);
+              } else {
+                setMessages((prev) => [
+                  ...prev.slice(0, -1),
+                  { role: "assistant", content },
+                ]);
+              }
+              scrollToBottom();
+            }
+          } catch {
+            // ignore malformed SSE frames
+          }
+        }
+      }
+
+      if (!started) {
+        // Stream ended without any tokens (shouldn't happen, but handle gracefully)
+        setMessages(nextHistory);
+      }
     } catch (err) {
       setError(err);
+      setMessages(nextHistory);
     } finally {
       setLoading(false);
+      scrollToBottom();
     }
   }
 
@@ -63,6 +116,8 @@ export function WeatherChat({ weatherData }: Props) {
     e.preventDefault();
     send(input);
   }
+
+  const isStreaming = loading && messages.length > 0 && messages[messages.length - 1]?.role === "assistant";
 
   return (
     <Card className="flex flex-col">
@@ -103,7 +158,8 @@ export function WeatherChat({ weatherData }: Props) {
                 </div>
               </div>
             ))}
-            {loading && (
+            {/* Spinner shown only before first streaming token arrives */}
+            {loading && !isStreaming && (
               <div className="flex justify-start">
                 <div className="bg-muted rounded-lg px-3 py-2">
                   <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />

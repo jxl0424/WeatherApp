@@ -1,14 +1,16 @@
+import json
+
 from fastapi import APIRouter
+from fastapi.responses import StreamingResponse
 
 from app.schemas.weather import (
     AdviceRequest,
     AdviceResponse,
-    ChatRequest,
-    ChatResponse,
     ResolveLocationRequest,
     ResolveLocationResponse,
     WeatherSummaryRequest,
     WeatherSummaryResponse,
+    ChatRequest,
 )
 from app.services.advice_service import (
     get_chat_reply,
@@ -16,6 +18,7 @@ from app.services.advice_service import (
     get_travel_advice,
     get_weather_summary,
 )
+from app.services.guardrails import REFUSAL, is_likely_injection
 
 router = APIRouter(prefix="/advice", tags=["advice"])
 
@@ -35,6 +38,20 @@ async def resolve_location(req: ResolveLocationRequest) -> ResolveLocationRespon
     return await get_resolved_location(req)
 
 
-@router.post("/chat", response_model=ChatResponse, summary="Weather-aware Q&A chat")
-async def weather_chat(req: ChatRequest) -> ChatResponse:
-    return await get_chat_reply(req)
+@router.post("/chat", summary="Weather-aware Q&A chat")
+async def weather_chat(req: ChatRequest) -> StreamingResponse:
+    if is_likely_injection(req.message):
+        async def _refusal():
+            yield f"data: {json.dumps({'token': REFUSAL})}\n\n"
+            yield "data: [DONE]\n\n"
+        return StreamingResponse(_refusal(), media_type="text/event-stream")
+
+    async def _stream():
+        try:
+            async for token in get_chat_reply(req):
+                yield f"data: {json.dumps({'token': token})}\n\n"
+        except Exception:
+            pass
+        yield "data: [DONE]\n\n"
+
+    return StreamingResponse(_stream(), media_type="text/event-stream")

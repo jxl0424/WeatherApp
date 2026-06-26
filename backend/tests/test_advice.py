@@ -63,9 +63,40 @@ def _make_response(content: str) -> MagicMock:
     return resp
 
 
+def _make_mock_client(response_content: str) -> AsyncMock:
+    """Return a mock client whose create() returns a single non-streaming response."""
+    mock_client = AsyncMock()
+    mock_client.chat.completions.create = AsyncMock(return_value=_make_response(response_content))
+    return mock_client
+
+
+def _make_streaming_mock(tokens: list[str]) -> AsyncMock:
+    """Return a mock client whose create() yields streaming chunks."""
+    async def _gen():
+        for t in tokens:
+            chunk = MagicMock()
+            chunk.choices = [MagicMock()]
+            chunk.choices[0].delta = MagicMock()
+            chunk.choices[0].delta.content = t
+            yield chunk
+
+    mock_client = AsyncMock()
+    mock_client.chat.completions.create = AsyncMock(return_value=_gen())
+    return mock_client
+
+
+def _make_error_client(error: Exception) -> AsyncMock:
+    mock_client = AsyncMock()
+    mock_client.chat.completions.create = AsyncMock(side_effect=error)
+    return mock_client
+
+
+# ── Advice tests ──────────────────────────────────────────────────────────────
+
 @pytest.mark.asyncio
 async def test_missing_api_key_raises():
-    with patch("app.integrations.nvidia_client.settings") as mock_settings:
+    with patch("app.integrations.nvidia_client._client_instance", None), \
+         patch("app.integrations.nvidia_client.settings") as mock_settings:
         mock_settings.NVIDIA_API_KEY = ""
         with pytest.raises(AIUnavailableError, match="NVIDIA_API_KEY"):
             await generate_advice(_REQUEST)
@@ -73,9 +104,8 @@ async def test_missing_api_key_raises():
 
 @pytest.mark.asyncio
 async def test_valid_response_parsed():
-    mock_client = AsyncMock()
-    mock_client.chat.completions.create = AsyncMock(return_value=_make_response(_VALID_PAYLOAD))
-    with patch("app.integrations.nvidia_client.AsyncOpenAI", return_value=mock_client):
+    mock_client = _make_mock_client(_VALID_PAYLOAD)
+    with patch("app.integrations.nvidia_client._client_instance", mock_client):
         result = await generate_advice(_REQUEST)
     assert result.clothing == ["Light layers"]
     assert result.warnings == []
@@ -83,20 +113,17 @@ async def test_valid_response_parsed():
 
 @pytest.mark.asyncio
 async def test_malformed_json_returns_fallback():
-    mock_client = AsyncMock()
-    mock_client.chat.completions.create = AsyncMock(return_value=_make_response("not json {{{"))
-    with patch("app.integrations.nvidia_client.AsyncOpenAI", return_value=mock_client):
+    mock_client = _make_mock_client("not json {{{")
+    with patch("app.integrations.nvidia_client._client_instance", mock_client):
         result = await generate_advice(_REQUEST)
     assert result.travel_considerations == ["AI response could not be parsed. Please try again."]
 
 
 @pytest.mark.asyncio
 async def test_api_error_raises():
-    mock_client = AsyncMock()
-    mock_client.chat.completions.create = AsyncMock(
-        side_effect=APIError("rate limited", request=MagicMock(spec=httpx.Request), body=None)
-    )
-    with patch("app.integrations.nvidia_client.AsyncOpenAI", return_value=mock_client):
+    err = APIError("rate limited", request=MagicMock(spec=httpx.Request), body=None)
+    mock_client = _make_error_client(err)
+    with patch("app.integrations.nvidia_client._client_instance", mock_client):
         with pytest.raises(AIUnavailableError, match="NVIDIA NIM"):
             await generate_advice(_REQUEST)
 
@@ -108,7 +135,8 @@ _SUMMARY_REQ = WeatherSummaryRequest(location=_LOCATION, current=_CURRENT, forec
 
 @pytest.mark.asyncio
 async def test_summary_missing_key_raises():
-    with patch("app.integrations.nvidia_client.settings") as mock_settings:
+    with patch("app.integrations.nvidia_client._client_instance", None), \
+         patch("app.integrations.nvidia_client.settings") as mock_settings:
         mock_settings.NVIDIA_API_KEY = ""
         with pytest.raises(AIUnavailableError, match="NVIDIA_API_KEY"):
             await generate_summary(_SUMMARY_REQ)
@@ -116,22 +144,17 @@ async def test_summary_missing_key_raises():
 
 @pytest.mark.asyncio
 async def test_summary_returns_text():
-    mock_client = AsyncMock()
-    mock_client.chat.completions.create = AsyncMock(
-        return_value=_make_response("Tokyo is warm and humid today with pleasant breezes.")
-    )
-    with patch("app.integrations.nvidia_client.AsyncOpenAI", return_value=mock_client):
+    mock_client = _make_mock_client("Tokyo is warm and humid today with pleasant breezes.")
+    with patch("app.integrations.nvidia_client._client_instance", mock_client):
         result = await generate_summary(_SUMMARY_REQ)
     assert "Tokyo" in result.summary
 
 
 @pytest.mark.asyncio
 async def test_summary_api_error_raises():
-    mock_client = AsyncMock()
-    mock_client.chat.completions.create = AsyncMock(
-        side_effect=APIError("timeout", request=MagicMock(spec=httpx.Request), body=None)
-    )
-    with patch("app.integrations.nvidia_client.AsyncOpenAI", return_value=mock_client):
+    err = APIError("timeout", request=MagicMock(spec=httpx.Request), body=None)
+    mock_client = _make_error_client(err)
+    with patch("app.integrations.nvidia_client._client_instance", mock_client):
         with pytest.raises(AIUnavailableError):
             await generate_summary(_SUMMARY_REQ)
 
@@ -139,12 +162,16 @@ async def test_summary_api_error_raises():
 # ── Resolve location tests ────────────────────────────────────────────────────
 
 _RESOLVE_REQ = ResolveLocationRequest(query="somewhere warm in Europe next week")
-_RESOLVE_PAYLOAD = json.dumps({"suggested_location": "Lisbon, Portugal", "reasoning": "Lisbon has warm sunny weather in summer."})
+_RESOLVE_PAYLOAD = json.dumps({
+    "suggested_location": "Lisbon, Portugal",
+    "reasoning": "Lisbon has warm sunny weather in summer.",
+})
 
 
 @pytest.mark.asyncio
 async def test_resolve_missing_key_raises():
-    with patch("app.integrations.nvidia_client.settings") as mock_settings:
+    with patch("app.integrations.nvidia_client._client_instance", None), \
+         patch("app.integrations.nvidia_client.settings") as mock_settings:
         mock_settings.NVIDIA_API_KEY = ""
         with pytest.raises(AIUnavailableError):
             await resolve_location(_RESOLVE_REQ)
@@ -152,9 +179,8 @@ async def test_resolve_missing_key_raises():
 
 @pytest.mark.asyncio
 async def test_resolve_returns_city():
-    mock_client = AsyncMock()
-    mock_client.chat.completions.create = AsyncMock(return_value=_make_response(_RESOLVE_PAYLOAD))
-    with patch("app.integrations.nvidia_client.AsyncOpenAI", return_value=mock_client):
+    mock_client = _make_mock_client(_RESOLVE_PAYLOAD)
+    with patch("app.integrations.nvidia_client._client_instance", mock_client):
         result = await resolve_location(_RESOLVE_REQ)
     assert result.suggested_location == "Lisbon, Portugal"
     assert result.reasoning
@@ -162,14 +188,13 @@ async def test_resolve_returns_city():
 
 @pytest.mark.asyncio
 async def test_resolve_malformed_falls_back_to_query():
-    mock_client = AsyncMock()
-    mock_client.chat.completions.create = AsyncMock(return_value=_make_response("not json"))
-    with patch("app.integrations.nvidia_client.AsyncOpenAI", return_value=mock_client):
+    mock_client = _make_mock_client("not json")
+    with patch("app.integrations.nvidia_client._client_instance", mock_client):
         result = await resolve_location(_RESOLVE_REQ)
     assert result.suggested_location == _RESOLVE_REQ.query
 
 
-# ── Chat tests ────────────────────────────────────────────────────────────────
+# ── Chat tests (streaming) ────────────────────────────────────────────────────
 
 _CHAT_REQ = ChatRequest(
     location=_LOCATION,
@@ -182,29 +207,28 @@ _CHAT_REQ = ChatRequest(
 
 @pytest.mark.asyncio
 async def test_chat_missing_key_raises():
-    with patch("app.integrations.nvidia_client.settings") as mock_settings:
+    with patch("app.integrations.nvidia_client._client_instance", None), \
+         patch("app.integrations.nvidia_client.settings") as mock_settings:
         mock_settings.NVIDIA_API_KEY = ""
-        with pytest.raises(AIUnavailableError):
-            await chat(_CHAT_REQ)
+        with pytest.raises(AIUnavailableError, match="NVIDIA_API_KEY"):
+            async for _ in chat(_CHAT_REQ):
+                pass
 
 
 @pytest.mark.asyncio
-async def test_chat_returns_reply():
-    mock_client = AsyncMock()
-    mock_client.chat.completions.create = AsyncMock(
-        return_value=_make_response("Wednesday looks great for hiking — partly cloudy and mild.")
-    )
-    with patch("app.integrations.nvidia_client.AsyncOpenAI", return_value=mock_client):
-        result = await chat(_CHAT_REQ)
-    assert "Wednesday" in result.reply
+async def test_chat_streams_tokens():
+    tokens = ["Wednesday ", "looks ", "great!"]
+    mock_client = _make_streaming_mock(tokens)
+    with patch("app.integrations.nvidia_client._client_instance", mock_client):
+        collected = [t async for t in chat(_CHAT_REQ)]
+    assert "".join(collected) == "Wednesday looks great!"
 
 
 @pytest.mark.asyncio
 async def test_chat_api_error_raises():
-    mock_client = AsyncMock()
-    mock_client.chat.completions.create = AsyncMock(
-        side_effect=APIError("error", request=MagicMock(spec=httpx.Request), body=None)
-    )
-    with patch("app.integrations.nvidia_client.AsyncOpenAI", return_value=mock_client):
+    err = APIError("error", request=MagicMock(spec=httpx.Request), body=None)
+    mock_client = _make_error_client(err)
+    with patch("app.integrations.nvidia_client._client_instance", mock_client):
         with pytest.raises(AIUnavailableError):
-            await chat(_CHAT_REQ)
+            async for _ in chat(_CHAT_REQ):
+                pass
