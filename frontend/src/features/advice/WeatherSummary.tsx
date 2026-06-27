@@ -14,8 +14,8 @@ export function WeatherSummary({ weatherData }: Props) {
 
   if (isLoading) {
     return (
-      <div className="flex gap-2 items-start text-sm text-muted-foreground">
-        <Sparkles className="h-4 w-4 mt-0.5 shrink-0 text-yellow-500" />
+      <div className="rounded-lg bg-sky-50 dark:bg-sky-950/20 border border-sky-100 dark:border-sky-900/30 px-4 py-3 flex gap-3 items-start">
+        <Sparkles className="h-4 w-4 mt-0.5 shrink-0 text-sky-400" />
         <div className="space-y-1.5 flex-1">
           <Skeleton className="h-3 w-full" />
           <Skeleton className="h-3 w-5/6" />
@@ -28,9 +28,9 @@ export function WeatherSummary({ weatherData }: Props) {
   if (!data?.summary) return null;
 
   return (
-    <div className="flex gap-2 items-start text-sm text-muted-foreground">
-      <Sparkles className="h-4 w-4 mt-0.5 shrink-0 text-yellow-500" />
-      <p className="leading-relaxed">{data.summary}</p>
+    <div className="rounded-lg bg-sky-50 dark:bg-sky-950/20 border border-sky-100 dark:border-sky-900/30 px-4 py-3 flex gap-3 items-start">
+      <Sparkles className="h-4 w-4 mt-0.5 shrink-0 text-sky-500" />
+      <p className="leading-relaxed text-sm italic text-foreground/80">{data.summary}</p>
     </div>
   );
 }

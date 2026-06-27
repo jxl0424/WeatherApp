@@ -131,9 +131,16 @@ export function WeatherSearch() {
 
       {/* Empty state */}
       {!weatherData && !activeQuery.isLoading && !activeQuery.isError && !geo.error && (
-        <div className="flex flex-col items-center gap-3 py-16 text-muted-foreground">
-          <CloudSun className="h-12 w-12 opacity-30" />
-          <p className="text-sm">Search a city, landmark, or use your current location to get started.</p>
+        <div className="flex flex-col items-center gap-4 py-20 text-center">
+          <div className="rounded-full bg-sky-50 dark:bg-sky-950/20 p-6">
+            <CloudSun className="h-14 w-14 text-sky-400" />
+          </div>
+          <div>
+            <h2 className="text-lg font-semibold mb-1">Where are you heading?</h2>
+            <p className="text-sm text-muted-foreground max-w-xs">
+              Search any city, landmark, or describe your ideal destination — &quot;warm beach in Europe&quot;
+            </p>
+          </div>
         </div>
       )}
 

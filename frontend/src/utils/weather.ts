@@ -1,3 +1,16 @@
+// Maps WMO weather code to a Tailwind gradient class for the hero card.
+export function wmoGradient(code: number): string {
+  if (code === 0) return "from-amber-400 via-orange-300 to-sky-400";
+  if (code <= 2) return "from-sky-500 to-blue-400";
+  if (code <= 3) return "from-slate-500 to-slate-400";
+  if (code <= 48) return "from-gray-600 to-slate-500";
+  if (code <= 55) return "from-cyan-600 to-blue-500";
+  if (code <= 65) return "from-blue-700 to-blue-900";
+  if (code <= 75) return "from-slate-600 to-blue-400";
+  if (code <= 82) return "from-blue-700 to-blue-900";
+  return "from-purple-800 to-indigo-900";
+}
+
 // Maps WMO weather code to a Lucide icon name and color class.
 export function wmoIcon(code: number): { icon: string; color: string } {
   if (code === 0) return { icon: "Sun", color: "text-yellow-400" };
@@ -27,5 +40,6 @@ export function aqiBadgeVariant(aqi: number | null | undefined): "default" | "se
 }
 
 export function formatTemp(temp: number | string): string {
-  return `${Number(temp).toFixed(1)}°C`;
+  const n = Number(temp);
+  return `${n % 1 === 0 ? n : n.toFixed(1)}°C`;
 }
